@@ -12,7 +12,7 @@ if __name__== '__main__':
           packages=find_packages(),
           setup_requires=[],
           install_requires=['altair', 'numpy', 'pandas', 'scipy',
-                            'sklearn', 'leiden'],
+                            'sklearn', 'leidenalg'],
           extras_require={'altair': ['altair']},
           scripts=[],
           name='aicv')
