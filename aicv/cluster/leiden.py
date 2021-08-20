@@ -2,6 +2,19 @@ import leidenalg
 import scipy
 import sklearn.manifold
 import numpy as np
+from .core import AbstractClusterAlg 
+
+
+class LeidenCluster(AbstractClusterAlg):
+
+    def __init__(self, tsne_perplexity, **kwargs):
+        AbstractClusterAlg.__init__(self=self,
+                                    tsne_perplexity=tsne_perplexity,
+                                    **kwargs) 
+
+    def __call__(self, features):
+        return run_leiden_using_tsneadapted_distances(
+                    features=features, perplexity=self.perplexity)
 
 
 #From: https://github.com/theislab/scanpy/blob/8131b05b7a8729eae3d3a5e146292f377dd736f7/scanpy/_utils.py#L159

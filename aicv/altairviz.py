@@ -1,6 +1,23 @@
 import altair as alt
 
 
+class AltairViz(object):
+
+    #data_frame should be an instance of aicv.core.DataFrame
+    def __init__(self, data_frame):
+        self.data_frame = data_frame
+        self.config = None
+
+    def set_config(self, config):
+        self.config = config 
+
+    def render(self):
+        if (self.config is None):
+            raise RuntimeError("You need to call set_config"
+                               +" to set the conifg!")
+        #TODO
+
+
 def get_interactive_histogram(colname):
   yaxis = alt.Y('count():Q', title="Count")
   xaxis = alt.X(colname+':Q', bin=alt.Bin(maxbins=100))
