@@ -1,2 +1,2 @@
 from __future__ import absolute_import, print_function, division
-from . import cluster, impute, altairviz
+from . import cluster, altairviz, core
