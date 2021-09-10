@@ -1,7 +1,11 @@
 from __future__ import division
 from __future__ import print_function
 import numpy as np
-import sklearn
+import sklearn.impute
+
+import aicv.cluster.core
+# import aicv.cluster.AbstractClusterAlg
+import aicv.cluster.leiden
 
 
 def normalize_features(raw_features):
@@ -13,10 +17,10 @@ def normalize_features(raw_features):
 
 def impute_features(normalized_features):
     #  for completing missing values using k-Nearest Neighbors
-    imputed_features = np.array([sklearn.impute.KNNImputer(
+    imputed_features = np.array(sklearn.impute.KNNImputer(
         missing_values=np.nan,
         n_neighbors=5,
-        weights='distance').fit_transform(normalized_features)]).transpose((1, 0))
+        weights='distance').fit_transform(normalized_features))  # .transpose((1, 0))
     return imputed_features
 
 
@@ -29,34 +33,35 @@ def normalize_and_impute_features(raw_features):
 class BaseClusterAlg(object):
 
     def __init__(self, cols_to_cluster, data_frame, tsne_perplexity=None):
-        self.cols_to_cluster = cols_to_cluster
-        self.data_frame = data_frame
-        raw_features = np.array(data_frame._pd_df[self.cols_to_cluster])
-        self.normalized_and_imputed_features = normalize_and_impute_features(
+        self.cols_to_cluster = [data_frame.resolve_columnname(c) for c in cols_to_cluster]
+        self.data_frame = data_frame.get_dataframe()
+        raw_features = np.array(self.data_frame[self.cols_to_cluster])
+        self.normalized_and_imputed_features = aicv.cluster.core.normalize_and_impute_features(
             raw_features=raw_features)
         self.tsne_perplexity = tsne_perplexity
 
     def get_clusters(self):
-        clusters = self(features=self.normalize_and_impute_features)
+        clusters = self(features=self.normalized_and_imputed_features)
         return clusters
+        # return self.normalized_and_imputed_features
 
     def add_tsne_to_df(self, ax1_name="tsne_ax1", ax2_name="tsne_ax2"):
-        embeddings = sklearn.manifold.TSNE(perplexity=self.tsne_perplexity,
-                                           random_state=123).fit_transform(
-            self.normalized_and_imputed_features)
-        self.data_frame._pd_df[ax1_name] = embeddings[:, 0]
-        self.data_frame._pd_df[ax2_name] = embeddings[:, 1]
+        if "tsne_ax1" not in list(self.data_frame.columns):
+            embeddings = sklearn.manifold.TSNE(perplexity=self.tsne_perplexity,
+                                               random_state=123).fit_transform(self.normalized_and_imputed_features)
+            self.data_frame[ax1_name] = embeddings[:, 0]
+            self.data_frame[ax2_name] = embeddings[:, 1]
 
     # data_frame is an instance of
     # aicv.core.DataFrame
     # cols_to_cluster is a list of columns that you're going to cluster
     # new_col_name is the new column in the data frame that you will store
     # the clustering results to
-    def add_clusters_to_df(self, new_col_name="cluster"):
+    def add_clusters_to_df(self, new_col_name="clusters"):
         clusters = self.get_clusters()
-        self.data_frame._pd_df[new_col_name] = clusters
+        self.data_frame[new_col_name] = clusters
 
     # features is a numpy array of dims num_examples x num_features
     # returns the integer clusters
     def __call__(self, features):
-        raise NotImplementedError()
+        return aicv.cluster.leiden.LeidenCluster(tsne_perplexity=20)(features)

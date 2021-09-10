@@ -12,8 +12,11 @@ class DataFrame(object):  # wrapper around a pandas data frame:
         self._colnames_map = {}
         self._colnames_old_new_map = {}
 
+    def get_dataframe(self):
+        return self._pd_df
+
     def add_derived_column(self, expression):
-        self._pd_df.eval(expression)
+        self._pd_df.eval(expression, inplace=True)
 
     def get_column_names(self):
         return list(self._pd_df.columns)
@@ -35,6 +38,6 @@ class DataFrame(object):  # wrapper around a pandas data frame:
     def resolve_columnname(self, name):
         if name in self._colnames_old_new_map:
             return self._colnames_old_new_map[name]
-        if name in self._colnames_map:
-            return self._colnames_map[name]
+        # if name in self._colnames_map:
+        #     return self._colnames_map[name]
         return name
