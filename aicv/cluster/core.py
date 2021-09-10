@@ -32,22 +32,23 @@ def normalize_and_impute_features(raw_features):
 
 class BaseClusterAlg(object):
 
-    def __init__(self, cols_to_cluster, data_frame, tsne_perplexity=None):
+    def __init__(self, cols_to_cluster, data_frame):
         self.cols_to_cluster = [data_frame.resolve_columnname(c) for c in cols_to_cluster]
         self.data_frame = data_frame.get_dataframe()
         raw_features = np.array(self.data_frame[self.cols_to_cluster])
         self.normalized_and_imputed_features = aicv.cluster.core.normalize_and_impute_features(
             raw_features=raw_features)
-        self.tsne_perplexity = tsne_perplexity
 
-    def get_clusters(self):
-        clusters = self(features=self.normalized_and_imputed_features)
+    def get_clusters(self, **kwargs):
+        clusters = self(features=self.normalized_and_imputed_features,
+                        **kwargs)
         return clusters
         # return self.normalized_and_imputed_features
 
-    def add_tsne_to_df(self, ax1_name="tsne_ax1", ax2_name="tsne_ax2"):
+    def add_tsne_to_df(self, tsne_perplexity, ax1_name="tsne_ax1",
+                              ax2_name="tsne_ax2"):
         if "tsne_ax1" not in list(self.data_frame.columns):
-            embeddings = sklearn.manifold.TSNE(perplexity=self.tsne_perplexity,
+            embeddings = sklearn.manifold.TSNE(perplexity=tsne_perplexity,
                                                random_state=123).fit_transform(self.normalized_and_imputed_features)
             self.data_frame[ax1_name] = embeddings[:, 0]
             self.data_frame[ax2_name] = embeddings[:, 1]
@@ -63,5 +64,5 @@ class BaseClusterAlg(object):
 
     # features is a numpy array of dims num_examples x num_features
     # returns the integer clusters
-    def __call__(self, features):
-        return aicv.cluster.leiden.LeidenCluster(tsne_perplexity=20)(features)
+    def __call__(self, features, **kwargs):
+        raise NotImplementedError()

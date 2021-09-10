@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+import argparse
+import toml
+import aicv
+
+
+def main(args):
+    filename = args.filename 
+    config = toml.loads(open(args.config_file).read())
+    
+    aicv_df = aicv.core.DataFrame(filename)     
+
+    if 'column_names_map' in config:
+        aicv_df.map_columns(config['column_names_map'])
+
+    if 'derived_columns' in config:
+        for derived_col in config['derived_columns']:
+            formula = config['derived_columns'][derived_col]
+            expression = derived_col+" = "+formula
+            aicv_df.add_derived_column(expression=expression)
+
+    if 'clustering_settings' in config:
+        clst_sttngs = config['cluster_settings']
+        cls = eval(clst_sttngs['class'])
+        clusterer = cls(cols_to_cluster=clst_sttngs['cols_to_cluster'],
+                        data_frame=aicv_df)
+        clusterer.add_clusters_to_df(perplexity=clst_sttngs['perplexity'],
+                                     new_col_name=clst_sttngs["new_col_name"])
+        if (cls_sttngs['add_tsne_embedding']):
+            clusterer.add_tsne_to_df(tsne_perplexity=cls_sttngs['perplexity'])
+
+    
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser() 
+    parser.add_argument("--filename", type=str) 
+    parser.add_argument("--config_file", type=str)
+    args = parser.parse_args()
+    main(args)
